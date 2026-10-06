@@ -1,0 +1,16 @@
+# Secrets and personal state - never commit these
+config.yaml
+credentials.json
+token.json
+.env
+cleanup_ledger.json
+.last_run
+
+# Output
+triage_*.log
+weekly_*.log
+
+# Python
+.venv/
+__pycache__/
+*.pyc

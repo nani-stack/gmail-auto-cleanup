@@ -1,0 +1,9 @@
+# Gmail API
+google-api-python-client>=2.0
+google-auth-oauthlib>=1.0
+PyYAML>=6.0
+python-dotenv>=1.0   # optional: reads TYPESAFE_API_KEY from a .env file
+
+# Pick one backend:
+#   hosted:     pip install typesafe-sdk
+#   local/open: pip install laya
