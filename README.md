@@ -67,7 +67,7 @@ Even the trash step is a move, and Gmail keeps trashed mail for 30 days.
 ### 1. Install
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/gmail-auto-cleanup
+git clone https://github.com/nani-stack/gmail-auto-cleanup
 cd gmail-auto-cleanup
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
