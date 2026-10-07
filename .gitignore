@@ -11,6 +11,6 @@ triage_*.log
 weekly_*.log
 
 # Python
-.venv/
+.venv*/
 __pycache__/
 *.pyc

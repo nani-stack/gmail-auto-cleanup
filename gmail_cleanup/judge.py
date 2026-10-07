@@ -18,12 +18,22 @@ from .config import Config, Question
 
 
 def _state(email: dict) -> dict:
-    """The only email fields any question sees. Bodies are never read."""
+    """The only email fields any question sees. Message bodies are never read."""
     return {"email": {
         "from": email["from"],
         "subject": email["subject"],
         "preview": email["snippet"],
     }}
+
+
+def _flat_state(email: dict) -> dict:
+    """Laya's own presets and helpers address state by field name, so give it
+    the flat `sender` / `subject` / `body` shape they expect."""
+    return {
+        "sender": email["from"],
+        "subject": email["subject"],
+        "body": email["snippet"],
+    }
 
 
 class JevBackend:
@@ -85,7 +95,7 @@ class LayaBackend:
         }
 
     def judge(self, emails: list[dict]) -> None:
-        states = [_state(e) for e in emails]
+        states = [_flat_state(e) for e in emails]
         try:
             results = self.agent.predict_batch(states, self.questions, batch_size=self.batch_size)
         except Exception as err:  # a local model failure applies to the whole batch

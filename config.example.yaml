@@ -11,6 +11,8 @@
 #        in between        -> review (labeled, left in the inbox)
 
 # Which model answers the questions: "jev" (hosted) or "laya" (local, open source).
+# "jev" is the tested path. "laya" runs locally and free, but behaves
+# differently - read the "Laya is experimental" section of the README first.
 backend: jev
 
 jev:
