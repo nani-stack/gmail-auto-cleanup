@@ -17,7 +17,7 @@ cd "$DIR" || exit 1
 PREFERRED_DOW=1      # 1 = Monday ... 7 = Sunday
 PREFERRED_HOUR=18    # 24-hour clock
 DUE_HOURS=144        # 6 days: earliest the preferred slot may fire
-CATCHUP_HOURS=204    # 8.5 days: the slot was missed, so run at the next check
+CATCHUP_HOURS=168    # 7 days: the slot was missed, so run at the next hourly check
 
 STAMP="$DIR/.last_run"
 
