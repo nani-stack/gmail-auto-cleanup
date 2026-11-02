@@ -75,6 +75,22 @@ class JevBackend:
             await asyncio.gather(*(one(e) for e in emails))
 
 
+def laya_questions(questions: list[Question]) -> dict[str, dict]:
+    """The configured questions in Laya's own dict form.
+
+    Shared with the training tools, so a finetuned model is asked at inference
+    time exactly what it was trained on.
+    """
+    return {
+        q.name: {
+            "type": "noul",
+            "instructions": q.instructions,
+            **({"criteria": q.criteria} if q.criteria else {}),
+        }
+        for q in questions
+    }
+
+
 class LayaBackend:
     """Convai's open-source model, loaded once and run locally in batches."""
 
@@ -85,14 +101,7 @@ class LayaBackend:
         self.batch_size = int(options.get("batch_size", 32))
         subfolder = options.get("subfolder")
         self.agent = laya.load(self.name, subfolder=subfolder) if subfolder else laya.load(self.name)
-        self.questions = {
-            q.name: {
-                "type": "noul",
-                "instructions": q.instructions,
-                **({"criteria": q.criteria} if q.criteria else {}),
-            }
-            for q in questions
-        }
+        self.questions = laya_questions(questions)
 
     def judge(self, emails: list[dict]) -> None:
         states = [_flat_state(e) for e in emails]
