@@ -112,6 +112,11 @@ python -c "from laya.train import dry_run; print(dry_run('data/train.jsonl', 'co
 python tools/evaluate.py --model out/inbox-v1 --data data/val.jsonl
 ```
 
+Trust this over the `train_report.json` that training writes beside the
+checkpoint. That file reports before/after metrics on a calibration slice of
+the **training** data and marks them `"is_held_out": false`. They measure fit.
+A model can post a Brier of 0.007 there and still have learned your senders.
+
 If it earns its place, point the config at it:
 
 ```yaml
@@ -119,7 +124,14 @@ backend: laya
 laya:
   model: out/inbox-v1
   batch_size: 32
+  fields: [sender, subject]   # exactly what build_dataset.py wrote
 ```
+
+`fields` is not optional bookkeeping. The dataset above has two fields, so a
+model trained on it has no weights for a third. Serving one anyway measurably
+degraded the result: on a 60-email sample, adding `body` changed the action on
+8% of them, every one into REVIEW, and shifted a benign body further than a
+hostile one. Run `tools/ablate_fields.py` to check your own.
 
 Then **re-tune your thresholds**. The finetuned model's probabilities are its
 own; `keep_at` and `cleanup_below` were set for the hosted model. Dry-run over
@@ -127,6 +139,20 @@ a few hundred emails, read the log, and adjust before letting it archive
 anything.
 
 ## What good looks like
+
+One worked result, for calibration. 68,597 logged judgements from an 18,000-
+email inbox, three epochs on a single RTX 5090, about 40 minutes of GPU time,
+scored on 400 held-out emails split by sender hash:
+
+| | stock | distilled |
+| --- | --- | --- |
+| Same action as the teacher | 39/73 (53.4%) | **66/73 (90.4%)** |
+| Brier vs the teacher | 0.139 | **0.006** |
+
+Precision reached 1.00 on all seven questions; recall ranged 0.50–1.00. One
+email in 73 was a KEEP the student would have archived. The gap that remains
+is mostly recall on rare questions, and it costs inbox clutter rather than
+lost mail.
 
 The honest bar is not "matches the teacher everywhere". It is:
 
