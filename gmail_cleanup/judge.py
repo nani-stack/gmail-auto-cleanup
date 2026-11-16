@@ -26,14 +26,24 @@ def _state(email: dict) -> dict:
     }}
 
 
-def _flat_state(email: dict) -> dict:
-    """Laya's own presets and helpers address state by field name, so give it
-    the flat `sender` / `subject` / `body` shape they expect."""
-    return {
+LAYA_FIELDS = ("sender", "subject", "body")
+
+
+def _flat_state(email: dict, fields: tuple[str, ...] = LAYA_FIELDS) -> dict:
+    """Laya addresses state by field name, so give it a flat shape.
+
+    `fields` must match what the model was trained on. A checkpoint distilled
+    from triage logs never saw a body -- the logs do not store one -- so
+    sending it one at inference is a field it has no weights for. Measured on
+    this inbox, that field changed the action on 8% of emails, every one of
+    them into REVIEW, and moved a benign body further than a hostile one.
+    """
+    available = {
         "sender": email["from"],
         "subject": email["subject"],
-        "body": email["snippet"],
+        "body": email.get("snippet", ""),
     }
+    return {name: available[name] for name in fields if name in available}
 
 
 class JevBackend:
@@ -99,12 +109,17 @@ class LayaBackend:
 
         self.name = options.get("model", "convaiinnovations/laya")
         self.batch_size = int(options.get("batch_size", 32))
+        self.fields = tuple(options.get("fields") or LAYA_FIELDS)
+        unknown = set(self.fields) - set(LAYA_FIELDS)
+        if unknown:
+            raise ValueError(f"unknown laya state field(s): {sorted(unknown)}; "
+                             f"choose from {list(LAYA_FIELDS)}")
         subfolder = options.get("subfolder")
         self.agent = laya.load(self.name, subfolder=subfolder) if subfolder else laya.load(self.name)
         self.questions = laya_questions(questions)
 
     def judge(self, emails: list[dict]) -> None:
-        states = [_flat_state(e) for e in emails]
+        states = [_flat_state(e, self.fields) for e in emails]
         try:
             results = self.agent.predict_batch(states, self.questions, batch_size=self.batch_size)
         except Exception as err:  # a local model failure applies to the whole batch

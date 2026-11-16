@@ -24,6 +24,11 @@ laya:
   model: convaiinnovations/laya
   # subfolder: multilingual   # for mail in 100+ languages
   batch_size: 32
+  # Which state fields the model is shown. This MUST match what it was
+  # trained on. The stock checkpoint takes all three. A checkpoint distilled
+  # from triage logs saw only sender and subject -- the logs store no body --
+  # so give that one [sender, subject]. See TRAINING.md.
+  fields: [sender, subject, body]
 
 gmail:
   queries:
